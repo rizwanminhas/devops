@@ -2,6 +2,9 @@
 - [K8s components](#k8s-components)
 - [Docker vs Kubernetes](#docker-vs-kubernetes)
 - [Docker Swarm vs Kubernets](#docker-swarm-vs-kubernets)
+- [minikube](#minikube)
+- [kubectl](#kubectl)
+- [Questions](#questions)
 
 # Introduction
 
@@ -36,6 +39,9 @@ What are the tasks of an orchestration tool?
   - Secret: Like ConfigMap but it stores secret data like db username and password. Stores it in Base64. Pods can read data from it.
   - Deployment: Blueprint for the pods. You can define how many replicas you want, auto scalling etc in it. Pods of the same containers would share their Service (in this case Service also acts as a LB). DB can't be replication via deployment because DB has state.
   - StatefulSet: It does what `Deployment` does but for the stateful apps or DBs. 
+  - Kubelet: Interacts with the Container runtime and manages the Node.
+  - Kube Proxy: Used for intelligent request routing e.g. send the request to the pod on the same node if possible instead of sending it to another replica node.
+  - Container runtime: For example Docker to run docker containers.
 - Virtual network: Spans all the nodes that are part of the cluster. Turns all the nodes inside of a cluster into one unified machine which has the sum of all the resources.
 - You should always have backup masters in case if one goes down.
 
@@ -45,8 +51,6 @@ What are the tasks of an orchestration tool?
       Master-->Worker2\nDockerContainers\nkubelet;
       Master-->Worker3\nDockerContainers\nkubelet;
 ```
-
-
 
 # Docker vs Kubernetes
 | Docker                                                                   | Kubernetes                                                    |
@@ -67,4 +71,24 @@ In Docker Swarm instead of `K8s Engine` you would just have Docker running in th
 | Lightweight and easier to use, but limited functionality | More complex with a high learning curve, but more powerful |
 | Manual scaling                                           | Supports auto-scaling                                      |
 | Needs 3rd party monitoring tools                         | Built in monitoring                                        |
-| Integrates docker CLI                                    | Need for a separate CLI tool                               |
+| Integrates docker CLI                                    | Need for a separate CLI tool|
+
+# minikube
+- Creates a Virtual Box on your machine
+- Node runs in that VB.
+- 1 Node k8s cluster
+- used for testing purposes
+
+# kubectl
+
+
+# Questions
+
+1. How do you interact with the cluster?
+   1. How to:
+      1. schedule pod?
+      2. monitor?
+      3. re-schedule/re-start pod?
+      4. join a new node?
+   
+    `Answer`: Master Node(s).
