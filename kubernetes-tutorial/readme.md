@@ -4,6 +4,8 @@
 - [Docker Swarm vs Kubernets](#docker-swarm-vs-kubernets)
 - [minikube](#minikube)
 - [kubectl](#kubectl)
+- [Commands](#commands)
+- [Example](#example)
 - [Questions](#questions)
 
 # Introduction
@@ -23,6 +25,13 @@ What are the tasks of an orchestration tool?
 - High availability or no downtime.
 - Scalability or high performance.
 - Disaster recovery - backup an restore.
+
+Layers of abstraction: `Deployment` manages --> `ReplicaSet` manages --> `Pod` is an abstraction of --> (docker) Container
+
+Each specification file has 3 parts:
+- metadata
+- specification
+- status *(automatically generated and added by k8s)*
 
 # K8s components
 - Master node: Runs the `API server`, `Controller manager`, `Scheduler`, `etcd`, `virtual network`.
@@ -78,9 +87,156 @@ In Docker Swarm instead of `K8s Engine` you would just have Docker running in th
 - Node runs in that VB.
 - 1 Node k8s cluster
 - used for testing purposes
+- runs both master and workers on one VB
 
 # kubectl
+- tool to interact with a k8s cluster. Other 2 options are UI and API. It is the most powerful of the 3.
+- can be used on local machine to interact with minikube.
 
+# Commands
+
+`kubectl get nodes` // returns the nodes
+`kubectl get pod` // get the pod
+`kubectl get services` // get the services
+`kubectl create -h` // see all the things you can create, this command can't create Pod because you don't create Pods, you only work with the abstraction layer called `deployment`.
+`kubectl create deployment NAME -image=image [--dry-run] [options]` // creates a deployment, image is the docker image name in most cases since you are using docker.
+`kubectl get deployment`
+`kubectl get replicaset`
+`kubectl edit deployment NAME` // to edit a deployment, it will terminate the old pod and create a new one, it will also stop the old ReplicaSet and start a new one.
+`kubectl logs NAME_OF_POD`
+`kubectl describe pod POD_NAME`
+`kubectl exec -it POD_NAME -- bin/bash` // to get the interactive terminal
+`kubectl delete deployment NAME`
+`kubectl apply -f [filepath/filename.yaml]` // reads the deployment config from the file and creates the deployment.
+
+# Example
+
+To create a deployment and a service on k8s I have added 2 sample `nginx-deployment.yaml` and `nginx-service.yaml` files.
+
+1. Navigate to the directory of these files.
+2. Execute `kubectl apply -f nginx-deployment.yaml`
+3. Execute `kubectl apply -f nginx-service.yaml`
+4. To validate execute `kubectl get pod` and `kubectl get service`
+5. To validate if the service has the right pods `kubectl describe service nginx-service`
+6. To check pod ip and ports `kubectl get pod -o wide`
+7. To check if k8s added status info `kubectl get deployment nginx-deployment -o yaml`
+8. To delete the deployment and service `kubectl delete -f nginx-deployment.yaml` and `kubectl delete -f nginx-service.yaml`.
+
+You should see something like this:
+
+```
+kubectl get pod
+
+NAME                               READY   STATUS    RESTARTS   AGE
+nginx-deployment-95585b474-tmd5s   1/1     Running   0          3m6s
+nginx-deployment-95585b474-xtqt9   1/1     Running   0          3m6s
+
+kubectl get service
+
+NAME            TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)   AGE
+kubernetes      ClusterIP   10.96.0.1        <none>        443/TCP   46h
+nginx-service   ClusterIP   10.102.188.205   <none>        80/TCP    35s
+```
+
+```
+kubectl describe service nginx-service
+
+Name:              nginx-service
+Namespace:         default
+Labels:            <none>
+Annotations:       <none>
+Selector:          app=nginx
+Type:              ClusterIP
+IP Family Policy:  SingleStack
+IP Families:       IPv4
+IP:                10.102.188.205
+IPs:               10.102.188.205
+Port:              <unset>  80/TCP
+TargetPort:        8080/TCP
+Endpoints:         10.244.0.3:8080,10.244.0.4:8080 // ip & ports of the pods that this service must forward requests to, matches the info below
+Session Affinity:  None
+Events:            <none>
+```
+
+```
+kubectl get pod -o wide
+
+NAME                               READY   STATUS    RESTARTS   AGE   IP           NODE       NOMINATED NODE   READINESS GATES
+nginx-deployment-95585b474-tmd5s   1/1     Running   0          11m   10.244.0.3   minikube   <none>           <none>
+nginx-deployment-95585b474-xtqt9   1/1     Running   0          11m   10.244.0.4   minikube   <none>           <none>
+```
+
+```
+kubectl get deployment nginx-deployment -o yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"nginx"},"name":"nginx-deployment","namespace":"default"},"spec":{"replicas":2,"selector":{"matchLabels":{"app":"nginx"}},"template":{"metadata":{"labels":{"app":"nginx"}},"spec":{"containers":[{"image":"nginx:1.16","name":"nginx","ports":[{"containerPort":8080}]}]}}}}
+  creationTimestamp: "2023-02-14T22:20:45Z"
+  generation: 1
+  labels:
+    app: nginx
+  name: nginx-deployment
+  namespace: default
+  resourceVersion: "4364"
+  uid: 0f9b5244-c3cc-4409-a804-4616be462638
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 2
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: nginx
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - image: nginx:1.16
+        imagePullPolicy: IfNotPresent
+        name: nginx
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+status:
+  availableReplicas: 2
+  conditions:
+  - lastTransitionTime: "2023-02-14T22:20:49Z"
+    lastUpdateTime: "2023-02-14T22:20:49Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2023-02-14T22:20:45Z"
+    lastUpdateTime: "2023-02-14T22:20:49Z"
+    message: ReplicaSet "nginx-deployment-95585b474" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 1
+  readyReplicas: 2
+  replicas: 2
+  updatedReplicas: 2
+```
 
 # Questions
 
