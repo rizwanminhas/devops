@@ -48,6 +48,9 @@ Benefits of using namespaces:
 3. share services b/w different environments.
 4. access and rource limits on namespace level.
 
+Ingress: Instead of making your service externally available so outside world can use it like http:ip:port, it is better to use ingress and keep the service internal. With ingress people can access site using https://domain.com. Outside requests first come to ingress and ingress forward to the actual service. You need an implementation for Ingress, which is ingress controller.
+Ingress controller: It evaluates and processes ingress rules. manages redirections, entrypoint to cluster. many third party implementations.k8s has nginx ingress controller. In minikube install it using `minikube addons enable ingress` and then `get pod -n kube-system`. You can also setup tls by first create a secret yaml on the same namespace and then referenceing it in the ingress yaml.
+
 # K8s components
 - Master node: Runs the `API server`, `Controller manager`, `Scheduler`, `etcd`, `virtual network`.
   - API Server: it is a container and it is the entrypoint to K8s cluster.

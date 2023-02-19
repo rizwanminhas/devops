@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: myingress
+  labels:
+    name: myingress
+spec:
+  rules:
+  - host: myapp.com # user will type this in browser http://myapp.com and it will redirect to myapp-internal-service
+    http: # incoming request gets forwarded to internal service via http, not to confuse with `https` for the outside world.
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: myapp-internal-service
+            port: 
+              number: 8080
