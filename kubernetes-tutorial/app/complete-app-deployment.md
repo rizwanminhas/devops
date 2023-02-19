@@ -8,5 +8,5 @@ Mongo Express (browser) -> Mongo Express (external service) -> MongoExpress (pod
 5. Create the config map `kubectl apply -f mongo-configmap.yaml`.
 6. setup mongo-express `kubectl apply -f mongo-express.yaml`
 7. create the external service (type: Loadbalancer in mongo-express.yaml).
-8. 
+8. In minikube you will also have to do `minikube service mongo-express-service` to open mongoexpress in browser at `127.0.0.1:...`. It assigns a public ip address.
  

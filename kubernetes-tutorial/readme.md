@@ -33,6 +33,21 @@ Each specification file has 3 parts:
 - specification
 - status *(automatically generated and added by k8s)*
 
+Namespace: Organise resources in namespaces. You can have multiple namespaces in K8s cluster. It is like a virtual cluster inside a cluster. You can't access most resources from another namespace but you can share services across namespaces. Each namespace must define own configmap. You can't create volume or node within a namespace - these resources are at the cluster level, to check which resources cannot be defined in a namespace use `kubectl api-resources --namespaced=false`. By default kubectl uses the `default` namespace that's why you don't specify it in the commands, but if you use a specific namespace then you will have to specify it in the kubectl commands, since mentioning it everytime is annoying you can use a tool called `kubens` install it using `brew install kubectx`. By defauly k8s gives you 4 namespaces: `kubectl get namespace`. 
+1. `kubernetes-dashboard` - Namespace comes only with minikube. 
+2. `kube-system` - Meant for k8s only. Do not create or modify in it. System processes, Master and kubectl processes.
+3. `kube-public` - Publicly accessible data, a configmap whcih contains cluster info. `kubectl cluster-info` returns the output from this configmap. 
+4. `kube-node-lease` - heartbeats of nodes. each node has associated lease object in namespace. determines the availability of a node.
+5. `default` - resources you create are located here.
+
+To create a namespace `kubectl create namespace my-name`
+
+Benefits of using namespaces:
+1. structure your components.
+2. avoid conflicts b/w teams.
+3. share services b/w different environments.
+4. access and rource limits on namespace level.
+
 # K8s components
 - Master node: Runs the `API server`, `Controller manager`, `Scheduler`, `etcd`, `virtual network`.
   - API Server: it is a container and it is the entrypoint to K8s cluster.
